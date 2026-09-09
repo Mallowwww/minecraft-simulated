@@ -1,14 +1,13 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "com.mallowwww.oritechsablecompat.mixin",
+  "package": "com.mallowwww.minecraftsimulated.mixin",
   "compatibilityLevel": "JAVA_8",
-  "refmap": "oritechsablecompat.mixins.refmap.json",
+  "refmap": "minecraftsimulated.mixins.refmap.json",
   "mixins": [
-
+    "FallingBlockMixin"
   ],
   "client": [
-
   ],
   "injectors": {
     "defaultRequire": 1

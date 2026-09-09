@@ -1,5 +1,7 @@
 package com.mallowwww.minecraftsimulated.entity;
 
+import com.mallowwww.minecraftsimulated.ModEntities;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.physics.object.box.BoxHandle;
@@ -9,6 +11,14 @@ import dev.ryanhcode.sable.mixinterface.block_properties.BlockStateExtension;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyTypes;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.CrashReportCategory;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.debug.DebugRenderer;
+import net.minecraft.client.renderer.entity.DisplayRenderer;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.FallingBlockRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -21,6 +31,7 @@ import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -29,6 +40,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -38,6 +50,11 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.RenderTypeHelper;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
@@ -52,7 +69,6 @@ public class FallingBlockPhysicsEntity extends Entity
 
     private RigidBodyHandle bodyHandle;
     private BoxHandle boxHandle;
-    private Pose3d readPose;
 
     private BlockState blockState = Blocks.SAND.defaultBlockState();
     public int idleTime;
@@ -72,13 +88,14 @@ public class FallingBlockPhysicsEntity extends Entity
                 state.hasProperty(BlockStateProperties.WATERLOGGED) ?
                         state.setValue(BlockStateProperties.WATERLOGGED, Boolean.FALSE) : state;
 
-        var box = new BoxPhysicsObject(pose, ext, ((BlockStateExtension) blockState).sable$getProperty(PhysicsBlockPropertyTypes.MASS));
+        var box = new BoxPhysicsObject(pose, ext, ((BlockStateExtension) blockState).sable$getProperty(PhysicsBlockPropertyTypes.MASS.get()));
 
         boxHandle = SubLevelPhysicsSystem.require(sLevel).getPipeline().addBox(box);
         bodyHandle = RigidBodyHandle.of(sLevel, box);
 
         level.setBlock(pos, blockState.getFluidState().createLegacyBlock(), 3);
         //level.addFreshEntity(this);
+
     }
     public FallingBlockPhysicsEntity(EntityType<? extends FallingBlockPhysicsEntity> entityType, Level level) {
         super(entityType, level);
@@ -124,10 +141,11 @@ public class FallingBlockPhysicsEntity extends Entity
         this.handlePortal();
         if (this.level().isClientSide || (!this.isAlive() && !this.forceTickAfterTeleportToDuplicate)) return;
 
+        var readPose = new Pose3d();
         boxHandle.readPose(readPose);
 
         this.setPos(readPose.position().x, readPose.position().y, readPose.position().z);
-
+        if (!bodyHandle.isValid()) return;
         if (bodyHandle.getLinearVelocity().length() < 0.1)
         {
             idleTime++;
@@ -277,5 +295,58 @@ public class FallingBlockPhysicsEntity extends Entity
         Entity entity = super.changeDimension(transition);
         this.forceTickAfterTeleportToDuplicate = entity != null && endInvolved;
         return entity;
+    }
+    @EventBusSubscriber
+    public static class Renderer extends EntityRenderer<FallingBlockPhysicsEntity> {
+        private final BlockRenderDispatcher dispatcher;
+        protected Renderer(EntityRendererProvider.Context context) {
+            super(context);
+            dispatcher = context.getBlockRenderDispatcher();
+        }
+
+        @Override
+        public ResourceLocation getTextureLocation(FallingBlockPhysicsEntity entity) {
+            return ResourceLocation.parse("minecraft:block/dirt.png");
+        }
+
+        @Override
+        public void render(FallingBlockPhysicsEntity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+            super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+            var model = this.dispatcher.getBlockModel(entity.blockState);
+            var modelData = model.getModelData(
+                    entity.level(),
+                    BlockPos.containing(entity.position()),
+                    entity.blockState,
+                    ModelData.EMPTY
+            );
+            var renderType = RenderTypeHelper.getMovingBlockRenderType(model.getRenderTypes(
+                    entity.blockState, entity.random, modelData
+            ).asList().getFirst());
+            this.dispatcher.getModelRenderer().tesselateBlock(
+                    entity.level(),
+                    model,
+                    entity.blockState,
+                    BlockPos.containing(entity.position()),
+                    poseStack,
+                    bufferSource.getBuffer(renderType),
+                    false,
+                    entity.random,
+                    0L,
+                    0xFFFFFFFF,
+                    modelData,
+                    renderType
+            );
+            Minecraft.getInstance().debugRenderer.collisionBoxRenderer.render(
+                    poseStack, bufferSource, 0, 0, 0
+            );
+        }
+
+        @SubscribeEvent
+        public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
+            event.registerEntityRenderer(
+                    ModEntities.FALLING_BLOCK_PHYSICS_ENTITY.get(),
+                    Renderer::new
+            );
+        }
     }
 }
