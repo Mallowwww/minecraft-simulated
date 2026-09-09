@@ -133,13 +133,6 @@ public class FallingBlockPhysicsEntity extends Entity
 
                     this.discard();//kill ourselves
 
-                    //foul hack to trick blocks into thinking everything is normal :) TODO add AT entry or find a better way
-                    if (block instanceof Fallable)
-                    {
-                        var dummy = new FallingBlockEntity(this.level(), this.getX(), this.getY(), this.getZ(), blockState);
-                        ((Fallable) block).onLand(this.level(), pos, this.blockState, preexistingBlock, dummy);
-                    }
-
                     //handle block entity data
                     if (this.blockData != null && this.blockState.hasBlockEntity())
                     {
@@ -217,7 +210,7 @@ public class FallingBlockPhysicsEntity extends Entity
     @Override
     protected Component getTypeName()
     {
-        //return Component.translatable("entity.minecraft.falling_block_type", this.blockState.getBlock().getName());
+        return Component.translatable("entity.minecraftsimulated.falling_block_type", this.blockState.getBlock().getName());
     }
 
     @Override
