@@ -10,6 +10,7 @@ import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyT
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -22,9 +23,13 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.RelativeMovement;
 import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -32,12 +37,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.portal.DimensionTransition;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
+import java.util.Set;
 
 public class FallingBlockPhysicsEntity extends Entity
 {
@@ -53,7 +60,7 @@ public class FallingBlockPhysicsEntity extends Entity
     public CompoundTag blockData;
     public boolean forceTickAfterTeleportToDuplicate;
 
-    public FallingBlockPhysicsEntity(EntityType<? extends FallingBlockEntity> entityType, Level level, BlockState state, BlockPos pos)
+    public FallingBlockPhysicsEntity(EntityType<? extends FallingBlockPhysicsEntity> entityType, Level level, BlockState state, BlockPos pos)
     {
         super(entityType, level);
         if (!(level instanceof ServerLevel sLevel)) return;
@@ -73,6 +80,10 @@ public class FallingBlockPhysicsEntity extends Entity
         level.setBlock(pos, blockState.getFluidState().createLegacyBlock(), 3);
         //level.addFreshEntity(this);
     }
+    public FallingBlockPhysicsEntity(EntityType<? extends FallingBlockPhysicsEntity> entityType, Level level) {
+        super(entityType, level);
+        // This constructor is for reconstruction from a packet, so the relevant physics setup will happen in recreateFromPacket()
+    }
 
     @Override
     protected Entity.@NotNull MovementEmission getMovementEmission()
@@ -89,6 +100,16 @@ public class FallingBlockPhysicsEntity extends Entity
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder)
     {
+    }
+
+    @Override
+    public boolean teleportTo(ServerLevel level, double x, double y, double z, Set<RelativeMovement> relativeMovements, float yRot, float xRot) {
+        //Fix teleports not bringing the physics object with the entity, since the entity follows the physics object
+        //Needed for /summon to work
+        bodyHandle.teleport(new Vector3d(x, y, z), new Quaterniond().rotateY(yRot).rotateX(xRot));
+
+        return super.teleportTo(level, x, y, z, relativeMovements, yRot, xRot);
+
     }
 
     @Override
@@ -124,9 +145,11 @@ public class FallingBlockPhysicsEntity extends Entity
                 var block = this.blockState.getBlock();
 
                 var stateToPlace = this.blockState;
-
+                // Unless we do access configuration BS, we should just let it handle how it wants to place
                 if(canHarden)
-                    stateToPlace = ((ConcretePowderBlock)block).concrete.defaultBlockState();
+                    stateToPlace = ((ConcretePowderBlock)block).getStateForPlacement(new BlockPlaceContext(
+                            this.level(), null, InteractionHand.MAIN_HAND, ItemStack.EMPTY, new BlockHitResult(pos.getCenter(), Direction.DOWN, pos, false)
+                    ));
 
                 if(stateToPlace.hasProperty(BlockStateProperties.WATERLOGGED)
                         && this.level().getFluidState(pos).getType() == Fluids.WATER)
