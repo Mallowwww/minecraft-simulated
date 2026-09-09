@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.portal.DimensionTransition;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaterniond;
@@ -120,12 +121,20 @@ public class FallingBlockPhysicsEntity extends Entity
             //if we are slow or in water as concrete
             if (idleTime >= 20 || canHarden)
             {
-                //try place in world, otherwise wait and let the time tick up
-                if (this.level().setBlock(pos, this.blockState, 3))
-                {
-                    Block block = this.blockState.getBlock();
-                    BlockState preexistingBlock = this.level().getBlockState(pos);
+                var block = this.blockState.getBlock();
 
+                var stateToPlace = this.blockState;
+
+                if(canHarden)
+                    stateToPlace = ((ConcretePowderBlock)block).concrete.defaultBlockState();
+
+                if(stateToPlace.hasProperty(BlockStateProperties.WATERLOGGED)
+                        && this.level().getFluidState(pos).getType() == Fluids.WATER)
+                            stateToPlace = stateToPlace.setValue(BlockStateProperties.WATERLOGGED, Boolean.TRUE);
+
+                //try place in world, otherwise wait and let the time tick up
+                if (this.level().setBlock(pos, stateToPlace, 3))
+                {
                     ((ServerLevel) this.level())
                             .getChunkSource()
                             .chunkMap
