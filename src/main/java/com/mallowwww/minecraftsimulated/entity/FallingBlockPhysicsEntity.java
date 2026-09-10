@@ -3,12 +3,15 @@ package com.mallowwww.minecraftsimulated.entity;
 import com.mallowwww.minecraftsimulated.ModEntities;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
+import dev.ryanhcode.sable.api.physics.PhysicsPipelineBody;
+import dev.ryanhcode.sable.api.physics.callback.BlockSubLevelCollisionCallback;
 import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.api.physics.object.box.BoxHandle;
 import dev.ryanhcode.sable.api.physics.object.box.BoxPhysicsObject;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.mixinterface.block_properties.BlockStateExtension;
 import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyTypes;
+import dev.ryanhcode.sable.physics.impl.rapier.Rapier3D;
 import dev.ryanhcode.sable.sublevel.system.SubLevelPhysicsSystem;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.client.Minecraft;
@@ -58,6 +61,7 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
+import org.joml.Vector3f;
 import org.slf4j.Logger;
 
 import javax.annotation.Nullable;
@@ -81,7 +85,14 @@ public class FallingBlockPhysicsEntity extends Entity
         super(entityType, level);
         if (!(level instanceof ServerLevel sLevel)) return;
 
-        var pose = new Pose3d(new Vector3d(pos.getX(), pos.getY(), pos.getZ()), new Quaterniond(), new Vector3d(), new Vector3d(1));
+//        var center = pos.getCenter();
+        var center = new Vector3d(
+                pos.getX(),
+                pos.getY(),
+                pos.getZ()
+        );
+
+        var pose = new Pose3d(new Vector3d(center.x, center.y, center.z), new Quaterniond(), new Vector3d(), new Vector3d(1));
         var ext = new Vector3d(0.5);
 
         blockState =
@@ -93,6 +104,11 @@ public class FallingBlockPhysicsEntity extends Entity
         boxHandle = SubLevelPhysicsSystem.require(sLevel).getPipeline().addBox(box);
         bodyHandle = RigidBodyHandle.of(sLevel, box);
 
+//        Rapier3D.addVoxelColliderBox(boxHandle.getRuntimeId(), new double[] {
+//                0d, 0d, 0d, 1d, 1d, 1d
+//        });
+        SubLevelPhysicsSystem.get(level).addObject(box);
+        
         level.setBlock(pos, blockState.getFluidState().createLegacyBlock(), 3);
         //level.addFreshEntity(this);
 
@@ -127,6 +143,12 @@ public class FallingBlockPhysicsEntity extends Entity
 
         return super.teleportTo(level, x, y, z, relativeMovements, yRot, xRot);
 
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        super.remove(reason);
+        boxHandle.remove();
     }
 
     @Override
@@ -312,6 +334,8 @@ public class FallingBlockPhysicsEntity extends Entity
         @Override
         public void render(FallingBlockPhysicsEntity entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
             super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+            poseStack.pushPose();
+            poseStack.translate(-0.5, -0.5, -0.5);
             var model = this.dispatcher.getBlockModel(entity.blockState);
             var modelData = model.getModelData(
                     entity.level(),
@@ -339,6 +363,7 @@ public class FallingBlockPhysicsEntity extends Entity
             Minecraft.getInstance().debugRenderer.collisionBoxRenderer.render(
                     poseStack, bufferSource, 0, 0, 0
             );
+            poseStack.popPose();
         }
 
         @SubscribeEvent

@@ -31,6 +31,10 @@ repositories {
         name = 'BlameJared Maven (CrT / Bookshelf)'
         url = 'https://maven.blamejared.com'
     }
+    maven {
+        name = "Fuzs Mod Resources"
+        url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
+    }
     exclusiveContent {
         forRepository {
             maven {
@@ -141,9 +145,10 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-    implementation "maven.modrinth:sable:2.0.0+mc1.21.1"
+    implementation ("dev.ryanhcode.sable:sable-common-${project.minecraft_version}:2.0.5")
+    implementation ("dev.ryanhcode.sable:sable-sable_rapier-${project.minecraft_version}:2.0.5")
 
-    implementation("foundry.veil:veil-neoforge-${project.minecraft_version}:${project.veil_version}") {
+    implementation("foundry.veil:veil-common-${project.minecraft_version}:${project.veil_version}") {
         exclude group: "maven.modrinth"
         exclude group: "me.fallenbreath"
     }
