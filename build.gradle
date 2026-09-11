@@ -20,6 +20,9 @@ sourceSets.main.resources {
 
 repositories {
     maven {
+        url = "https://maven.ithundxr.dev/snapshots"
+    } // Registrate
+    maven {
         name = "BlameJared"
         url = "https://maven.blamejared.com"
     }
@@ -159,6 +162,8 @@ dependencies {
             prefer(project.sable_companion_version)
         }
     }
+
+    jarJar(api("com.tterrag.registrate:Registrate:$registrate_version"))
 }
 
 tasks.withType(ProcessResources).configureEach {
