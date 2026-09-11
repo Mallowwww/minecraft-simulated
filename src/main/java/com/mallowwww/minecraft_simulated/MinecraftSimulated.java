@@ -4,6 +4,7 @@ import com.mallowwww.minecraft_simulated.registry.ModItems;
 import com.tterrag.registrate.Registrate;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import org.slf4j.Logger;
@@ -34,6 +35,10 @@ public class MinecraftSimulated
         ModItems.register();
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+    }
+
+    public static ResourceLocation loc(String s) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, s);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
