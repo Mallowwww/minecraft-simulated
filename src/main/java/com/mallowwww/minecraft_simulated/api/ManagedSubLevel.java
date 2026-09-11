@@ -38,10 +38,13 @@ public abstract class ManagedSubLevel extends SubLevel {
             return false;
 
         componentTypes[type / 32] |= 1 << (type % 32);
-
-        SubLevelComponentRegistry.ID_TO_COMPONENT_TYPE.get(type).addData(
+        var componentType = SubLevelComponentRegistry.ID_TO_COMPONENT_TYPE.get(type);
+        componentType.addData(
                 this, component
         );
+        componentType.apply(this, component);
+
+
 
         return true;
     }
@@ -53,9 +56,11 @@ public abstract class ManagedSubLevel extends SubLevel {
 
         componentTypes[type / 32] ^= 1 << (type % 32);
 
-        SubLevelComponentRegistry.ID_TO_COMPONENT_TYPE.get(type).removeData(
+        var componentType = SubLevelComponentRegistry.ID_TO_COMPONENT_TYPE.get(type);
+        componentType.removeData(
                 this, component
         );
+        componentType.remove(this, component);
 
         return true;
     }

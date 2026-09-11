@@ -27,9 +27,9 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
         Arrays.fill(SPARSE, -1);
     }
 
-    public abstract void tick(ManagedSubLevel subLevel, T component);
-    public abstract void apply(ManagedSubLevel subLevel, T component);
-    public abstract void remove(ManagedSubLevel subLevel, T component);
+    public abstract void tick(ManagedSubLevel subLevel, SubLevelComponent component);
+    public abstract void apply(ManagedSubLevel subLevel, SubLevelComponent component);
+    public abstract void remove(ManagedSubLevel subLevel, SubLevelComponent component);
 
     public abstract Optional<CompoundTag> save(T component);
     public abstract Optional<T> load(CompoundTag tag);
@@ -120,18 +120,18 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
 
             return new SubLevelComponentType<T>(location) {
                 @Override
-                public void tick(ManagedSubLevel subLevel, T component) {
-                    tick.accept(subLevel, component);
+                public void tick(ManagedSubLevel subLevel, SubLevelComponent component) {
+                    tick.accept(subLevel, (T) component);
                 }
 
                 @Override
-                public void apply(ManagedSubLevel subLevel, T component) {
-                    apply.accept(subLevel, component);
+                public void apply(ManagedSubLevel subLevel, SubLevelComponent component) {
+                    apply.accept(subLevel, (T) component);
                 }
 
                 @Override
-                public void remove(ManagedSubLevel subLevel, T component) {
-                    remove.accept(subLevel, component);
+                public void remove(ManagedSubLevel subLevel, SubLevelComponent component) {
+                    remove.accept(subLevel, (T) component);
                 }
 
                 @Override
