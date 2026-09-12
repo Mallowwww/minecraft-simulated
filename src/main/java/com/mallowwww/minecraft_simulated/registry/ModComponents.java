@@ -22,6 +22,7 @@ public class ModComponents {
                             handle.applyLinearImpulse(new Vector3d(0f, 3f, 0f));
                         }
                     }))
+                    .create(GoUpComponent::new)
                     .build(resourceLocation)
     );
 }

@@ -9,6 +9,7 @@ import oshi.util.tuples.Pair;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public abstract class SubLevelComponentType<T extends SubLevelComponent> {
     private static int nextId = 0;
@@ -33,6 +34,8 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
 
     public abstract Optional<CompoundTag> save(T component);
     public abstract Optional<T> load(CompoundTag tag);
+
+    public abstract T create();
 
     public final void addData(SubLevel subLevel, SubLevelComponent component) {
         var managedSubLevel = (SubLevelMixin) (Object) subLevel;
@@ -82,6 +85,7 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
 
         private Function<T, CompoundTag> save;
         private Function<CompoundTag, T> load;
+        private Supplier<T> create;
 
         public Builder() {
             tick = (a, b) -> {};
@@ -90,6 +94,7 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
 
             save = null;
             load = null;
+            create = null;
         }
 
         public Builder<T> tick(BiConsumer<SubLevel, T> consumer) {
@@ -113,6 +118,10 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
             load = function;
             return this;
         }
+        public Builder<T> create(Supplier<T> supplier) {
+            create = supplier;
+            return this;
+        }
 
         public SubLevelComponentType<T> build(ResourceLocation location) {
             if (save == null ^ load == null)
@@ -120,7 +129,8 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
                     throw new RuntimeException("Failed to build SubLevelComponentType: Must implement save() to be serializable!");
                 else
                     throw new RuntimeException("Failed to build SubLevelComponentType: Must implement load() to be serializable!");
-
+            if (create == null)
+                throw new RuntimeException("Failed to build SubLevelComponentType: Must be able to make the default component!");
             return new SubLevelComponentType<T>(location) {
                 @Override
                 public void tick(SubLevel subLevel, SubLevelComponent component) {
@@ -147,6 +157,11 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
                 public Optional<T> load(CompoundTag tag) {
                     if (load == null) return Optional.empty();
                     return Optional.of(load.apply(tag));
+                }
+
+                @Override
+                public T create() {
+                    return create.get();
                 }
             };
         }
