@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceKey;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.registries.NewRegistryEvent;
 import net.neoforged.neoforge.registries.RegistryBuilder;
 
 import java.util.ArrayList;
@@ -24,5 +25,9 @@ public class SubLevelComponentRegistry {
     @SubscribeEvent
     public static void preTick(ServerTickEvent.Pre event) {
         COMPONENT_TYPES.forEach(SubLevelComponentType::tickAll);
+    }
+    @SubscribeEvent
+    public static void register(NewRegistryEvent event) {
+        event.register(COMPONENT_TYPES);
     }
 }
