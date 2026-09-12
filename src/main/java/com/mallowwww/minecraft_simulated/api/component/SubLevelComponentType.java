@@ -1,7 +1,7 @@
 package com.mallowwww.minecraft_simulated.api.component;
 
-import com.mallowwww.minecraft_simulated.api.ManagedSubLevel;
-import com.sun.jna.platform.win32.COM.COMBindingBaseObject;
+import com.mallowwww.minecraft_simulated.mixin.SubLevelMixin;
+import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import oshi.util.tuples.Pair;
@@ -16,7 +16,7 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
     private final ResourceLocation location;
     private final int id;
 
-    private final ArrayList<Pair<ManagedSubLevel, T>> DENSE = new ArrayList<>();
+    private final ArrayList<Pair<SubLevel, T>> DENSE = new ArrayList<>();
     private final int[] SPARSE = new int[1024];
 
     private SubLevelComponentType(ResourceLocation location) {
@@ -27,33 +27,36 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
         Arrays.fill(SPARSE, -1);
     }
 
-    public abstract void tick(ManagedSubLevel subLevel, SubLevelComponent component);
-    public abstract void apply(ManagedSubLevel subLevel, SubLevelComponent component);
-    public abstract void remove(ManagedSubLevel subLevel, SubLevelComponent component);
+    public abstract void tick(SubLevel subLevel, SubLevelComponent component);
+    public abstract void apply(SubLevel subLevel, SubLevelComponent component);
+    public abstract void remove(SubLevel subLevel, SubLevelComponent component);
 
     public abstract Optional<CompoundTag> save(T component);
     public abstract Optional<T> load(CompoundTag tag);
 
-    public final void addData(ManagedSubLevel subLevel, SubLevelComponent component) {
-        if (SPARSE[subLevel.id] != -1)
+    public final void addData(SubLevel subLevel, SubLevelComponent component) {
+        var managedSubLevel = (SubLevelMixin) (Object) subLevel;
+        if (SPARSE[managedSubLevel.id] != -1)
             throw new RuntimeException("Sublevel already has this component!");
-        SPARSE[subLevel.id] = DENSE.size();
-        DENSE.addLast(new Pair<ManagedSubLevel, T>(subLevel, (T) component));
+        SPARSE[managedSubLevel.id] = DENSE.size();
+        DENSE.addLast(new Pair<SubLevel, T>(subLevel, (T) component));
     }
-    public final void modifyData(ManagedSubLevel subLevel, SubLevelComponent component) {
-        if (SPARSE[subLevel.id] == -1)
+    public final void modifyData(SubLevel subLevel, SubLevelComponent component) {
+        var managedSubLevel = (SubLevelMixin) (Object) subLevel;
+        if (SPARSE[managedSubLevel.id] == -1)
             throw new RuntimeException("Sublevel does not have this component!");
-        DENSE.set(SPARSE[subLevel.id], null);
-        SPARSE[subLevel.id] = DENSE.size();
+        DENSE.set(SPARSE[managedSubLevel.id], null);
+        SPARSE[managedSubLevel.id] = DENSE.size();
         DENSE.addLast(new Pair<>(subLevel, (T) component));
     }
-    public final void removeData(ManagedSubLevel subLevel, SubLevelComponent component) {
-        if (SPARSE[subLevel.id] == -1)
+    public final void removeData(SubLevel subLevel, SubLevelComponent component) {
+        var managedSubLevel = (SubLevelMixin) (Object) subLevel;
+        if (SPARSE[managedSubLevel.id] == -1)
             throw new RuntimeException("Sublevel does not have this component!");
-        DENSE.set(SPARSE[subLevel.id], null);
-        SPARSE[subLevel.id] = -1;
+        DENSE.set(SPARSE[managedSubLevel.id], null);
+        SPARSE[managedSubLevel.id] = -1;
     }
-    public final void forEach(BiConsumer<ManagedSubLevel, T> consumer) {
+    public final void forEach(BiConsumer<SubLevel, T> consumer) {
         DENSE.forEach(pair -> consumer.accept(pair.getA(), pair.getB()));
     }
     public final void tickAll() {
@@ -73,9 +76,9 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
     }
 
     public static class Builder<T extends SubLevelComponent> {
-        private BiConsumer<ManagedSubLevel, T> tick;
-        private BiConsumer<ManagedSubLevel, T> apply;
-        private BiConsumer<ManagedSubLevel, T> remove;
+        private BiConsumer<SubLevel, T> tick;
+        private BiConsumer<SubLevel, T> apply;
+        private BiConsumer<SubLevel, T> remove;
 
         private Function<T, CompoundTag> save;
         private Function<CompoundTag, T> load;
@@ -89,15 +92,15 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
             load = null;
         }
 
-        public Builder<T> tick(BiConsumer<ManagedSubLevel, T> consumer) {
+        public Builder<T> tick(BiConsumer<SubLevel, T> consumer) {
             tick = consumer;
             return this;
         }
-        public Builder<T> apply(BiConsumer<ManagedSubLevel, T> consumer) {
+        public Builder<T> apply(BiConsumer<SubLevel, T> consumer) {
             apply = consumer;
             return this;
         }
-        public Builder<T> remove(BiConsumer<ManagedSubLevel, T> consumer) {
+        public Builder<T> remove(BiConsumer<SubLevel, T> consumer) {
             remove = consumer;
             return this;
         }
@@ -120,17 +123,17 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
 
             return new SubLevelComponentType<T>(location) {
                 @Override
-                public void tick(ManagedSubLevel subLevel, SubLevelComponent component) {
+                public void tick(SubLevel subLevel, SubLevelComponent component) {
                     tick.accept(subLevel, (T) component);
                 }
 
                 @Override
-                public void apply(ManagedSubLevel subLevel, SubLevelComponent component) {
+                public void apply(SubLevel subLevel, SubLevelComponent component) {
                     apply.accept(subLevel, (T) component);
                 }
 
                 @Override
-                public void remove(ManagedSubLevel subLevel, SubLevelComponent component) {
+                public void remove(SubLevel subLevel, SubLevelComponent component) {
                     remove.accept(subLevel, (T) component);
                 }
 

@@ -1,36 +1,36 @@
-package com.mallowwww.minecraft_simulated.api;
+package com.mallowwww.minecraft_simulated.mixin;
 
+import com.mallowwww.minecraft_simulated.api.SubLevelComponentRegistry;
 import com.mallowwww.minecraft_simulated.api.component.SubLevelComponent;
-import dev.ryanhcode.sable.api.sublevel.SubLevelContainer;
+import dev.ryanhcode.sable.companion.SubLevelAccess;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.sublevel.SubLevel;
-import dev.ryanhcode.sable.sublevel.plot.LevelPlot;
-import net.minecraft.world.level.Level;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.ArrayList;
+import java.util.logging.Level;
 
-public abstract class ManagedSubLevel extends SubLevel {
-
+@Mixin(SubLevel.class)
+public abstract class SubLevelMixin implements SubLevelAccess {
     private int[] componentTypes = new int[32];
-    public final int id;
+    public int id;
     private static int nextId = 0;
-    private static final int maxId = 2023;
+    private static final int maxId = 1023;
 
-    /**
-     * Creates a new sub-level with the given parent level and pose.
-     *
-     * @param level the parent level
-     * @param plotX the global plot x coordinate
-     * @param plotY the global plot y coordinate
-     * @param pose  the initialization pose of the sub-level
-     */
-    protected ManagedSubLevel(Level level, int plotX, int plotY, Pose3d pose) {
-        super(level, plotX, plotY, pose);
+    private SubLevelMixin() {
+        id = 0;
+    }
+
+    @Inject(method = "<init>", at=@At("TAIL"))
+    public void init(Level level, int plotX, int plotY, Pose3d pose, CallbackInfo ci) {
         id = nextId++;
         if (id > maxId)
             throw new RuntimeException("Cannot have more than "+(maxId+1)+" managed sublevels!");
     }
-
+    @Unique
     public final <T extends SubLevelComponent> boolean add(T component) {
         int type = component.type();
 
@@ -40,14 +40,15 @@ public abstract class ManagedSubLevel extends SubLevel {
         componentTypes[type / 32] |= 1 << (type % 32);
         var componentType = SubLevelComponentRegistry.ID_TO_COMPONENT_TYPE.get(type);
         componentType.addData(
-                this, component
+                (SubLevel) (Object) this, component
         );
-        componentType.apply(this, component);
+        componentType.apply((SubLevel) (Object) this, component);
 
 
 
         return true;
     }
+    @Unique
     public final boolean remove(SubLevelComponent component) {
         int type = component.type();
 
@@ -58,12 +59,11 @@ public abstract class ManagedSubLevel extends SubLevel {
 
         var componentType = SubLevelComponentRegistry.ID_TO_COMPONENT_TYPE.get(type);
         componentType.removeData(
-                this, component
+                (SubLevel) (Object) this, component
         );
-        componentType.remove(this, component);
+        componentType.remove( (SubLevel) (Object) this, component);
 
         return true;
     }
-
 
 }
