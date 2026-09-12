@@ -1,6 +1,6 @@
 package com.mallowwww.minecraft_simulated.api.component;
 
-import com.mallowwww.minecraft_simulated.mixin.SubLevelMixin;
+import com.mallowwww.minecraft_simulated.api.SubLevelExtension;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -38,26 +38,26 @@ public abstract class SubLevelComponentType<T extends SubLevelComponent> {
     public abstract T create();
 
     public final void addData(SubLevel subLevel, SubLevelComponent component) {
-        var managedSubLevel = (SubLevelMixin) (Object) subLevel;
-        if (SPARSE[managedSubLevel.id] != -1)
+        var managedSubLevel = (SubLevelExtension) subLevel;
+        if (SPARSE[managedSubLevel.id()] != -1)
             throw new RuntimeException("Sublevel already has this component!");
-        SPARSE[managedSubLevel.id] = DENSE.size();
+        SPARSE[managedSubLevel.id()] = DENSE.size();
         DENSE.addLast(new Pair<SubLevel, T>(subLevel, (T) component));
     }
     public final void modifyData(SubLevel subLevel, SubLevelComponent component) {
-        var managedSubLevel = (SubLevelMixin) (Object) subLevel;
-        if (SPARSE[managedSubLevel.id] == -1)
+        var managedSubLevel = (SubLevelExtension) subLevel;
+        if (SPARSE[managedSubLevel.id()] == -1)
             throw new RuntimeException("Sublevel does not have this component!");
-        DENSE.set(SPARSE[managedSubLevel.id], null);
-        SPARSE[managedSubLevel.id] = DENSE.size();
+        DENSE.set(SPARSE[managedSubLevel.id()], null);
+        SPARSE[managedSubLevel.id()] = DENSE.size();
         DENSE.addLast(new Pair<>(subLevel, (T) component));
     }
-    public final void removeData(SubLevel subLevel, SubLevelComponent component) {
-        var managedSubLevel = (SubLevelMixin) (Object) subLevel;
-        if (SPARSE[managedSubLevel.id] == -1)
+    public final void removeData(SubLevel subLevel) {
+        var managedSubLevel = (SubLevelExtension) subLevel;
+        if (SPARSE[managedSubLevel.id()] == -1)
             throw new RuntimeException("Sublevel does not have this component!");
-        DENSE.set(SPARSE[managedSubLevel.id], null);
-        SPARSE[managedSubLevel.id] = -1;
+        DENSE.set(SPARSE[managedSubLevel.id()], null);
+        SPARSE[managedSubLevel.id()] = -1;
     }
     public final void forEach(BiConsumer<SubLevel, T> consumer) {
         DENSE.forEach(pair -> consumer.accept(pair.getA(), pair.getB()));

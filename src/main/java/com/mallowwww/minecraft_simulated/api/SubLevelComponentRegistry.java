@@ -19,7 +19,7 @@ public class SubLevelComponentRegistry {
     public static final Registry<SubLevelComponentType<? extends SubLevelComponent>> COMPONENT_TYPES = new RegistryBuilder<SubLevelComponentType<? extends SubLevelComponent>>(
             ResourceKey.createRegistryKey(MinecraftSimulated.loc("component_types"))
     ).onAdd((registry, id, key, value) -> {
-        ID_TO_COMPONENT_TYPE.set(value.id(), value);
+        ID_TO_COMPONENT_TYPE.addLast(value);
     }).create();
 
     @SubscribeEvent

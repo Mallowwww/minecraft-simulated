@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "minecraftsimulated.mixins.refmap.json",
   "mixins": [
-    "FallingBlockMixin"
+    "FallingBlockMixin",
+    "ServerSubLevelMixin"
   ],
   "client": [
   ],

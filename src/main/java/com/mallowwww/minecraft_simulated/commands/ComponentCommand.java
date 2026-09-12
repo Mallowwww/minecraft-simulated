@@ -1,10 +1,11 @@
 package com.mallowwww.minecraft_simulated.commands;
 
 import com.mallowwww.minecraft_simulated.api.SubLevelComponentRegistry;
-import com.mallowwww.minecraft_simulated.mixin.SubLevelExtension;
+import com.mallowwww.minecraft_simulated.api.SubLevelExtension;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.ryanhcode.sable.companion.SableCompanion;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
@@ -36,7 +37,9 @@ public class ComponentCommand
 
                                         var component = cType.create();
 
-                                        var sublevel = (SubLevelExtension) SableCompanion.INSTANCE.getContaining(ctx.getSource().getLevel(), pos);
+//                                        var sublevel = (SubLevelExtension) SableCompanion.INSTANCE.getContaining(ctx.getSource().getLevel(), pos);
+                                        if (!(SableCompanion.INSTANCE.getContaining(ctx.getSource().getLevel(), pos) instanceof ServerSubLevel serverSubLevel)) return 1;
+                                        var sublevel = (SubLevelExtension) serverSubLevel;
                                         assert sublevel != null;
 
                                         if(!sublevel.add(component))
