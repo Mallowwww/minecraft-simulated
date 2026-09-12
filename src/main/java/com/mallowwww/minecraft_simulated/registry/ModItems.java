@@ -13,42 +13,42 @@ public class ModItems
 
     public static  final RegistryEntry<Item, MalletItem> WOODEN_MALLET = MinecraftSimulated.REGISTRATE.get().item("wooden_mallet",
                     p -> new MalletItem(Tiers.WOOD, p
-                            .attributes(MalletItem.createAttributes(Tiers.WOOD, 1.0F, -2.8F))
+                            .attributes(MalletItem.createAttributes(Tiers.WOOD))
                     ))
             .tab(CreativeModeTabs.TOOLS_AND_UTILITIES)
             .register();
 
     public static  final RegistryEntry<Item, MalletItem> STONE_MALLET = MinecraftSimulated.REGISTRATE.get().item("stone_mallet",
                     p -> new MalletItem(Tiers.STONE, p
-                            .attributes(MalletItem.createAttributes(Tiers.STONE, 1.0F, -2.8F))
+                            .attributes(MalletItem.createAttributes(Tiers.STONE))
                     ))
             .tab(CreativeModeTabs.TOOLS_AND_UTILITIES)
             .register();
 
     public static  final RegistryEntry<Item, MalletItem> IRON_MALLET = MinecraftSimulated.REGISTRATE.get().item("iron_mallet",
                     p -> new MalletItem(Tiers.IRON, p
-                            .attributes(MalletItem.createAttributes(Tiers.IRON, 1.0F, -2.8F))
+                            .attributes(MalletItem.createAttributes(Tiers.IRON))
                     ))
             .tab(CreativeModeTabs.TOOLS_AND_UTILITIES)
             .register();
 
     public static  final RegistryEntry<Item, MalletItem> GOLDEN_MALLET = MinecraftSimulated.REGISTRATE.get().item("golden_mallet",
                     p -> new MalletItem(Tiers.GOLD, p
-                            .attributes(MalletItem.createAttributes(Tiers.GOLD, 1.0F, -2.8F))
+                            .attributes(MalletItem.createAttributes(Tiers.GOLD))
                     ))
             .tab(CreativeModeTabs.TOOLS_AND_UTILITIES)
             .register();
 
     public static  final RegistryEntry<Item, MalletItem> DIAMOND_MALLET = MinecraftSimulated.REGISTRATE.get().item("diamond_mallet",
                     p -> new MalletItem(Tiers.DIAMOND, p
-                            .attributes(MalletItem.createAttributes(Tiers.DIAMOND, 1.0F, -2.8F))
+                            .attributes(MalletItem.createAttributes(Tiers.DIAMOND))
                     ))
             .tab(CreativeModeTabs.TOOLS_AND_UTILITIES)
             .register();
 
     public static  final RegistryEntry<Item, MalletItem> NETHERITE_MALLET = MinecraftSimulated.REGISTRATE.get().item("netherite_mallet",
                     p -> new MalletItem(Tiers.NETHERITE, p
-                            .attributes(MalletItem.createAttributes(Tiers.NETHERITE, 1.0F, -2.8F))
+                            .attributes(MalletItem.createAttributes(Tiers.NETHERITE))
                     ))
             .tab(CreativeModeTabs.TOOLS_AND_UTILITIES)
             .register();
