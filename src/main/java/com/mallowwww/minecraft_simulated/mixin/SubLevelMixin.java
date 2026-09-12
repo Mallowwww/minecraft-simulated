@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.logging.Level;
 
 @Mixin(SubLevel.class)
-public abstract class SubLevelMixin implements SubLevelAccess {
+public abstract class SubLevelMixin implements SubLevelAccess, SubLevelExtension {
     private int[] componentTypes = new int[32];
     public int id;
     private static int nextId = 0;
@@ -64,6 +64,9 @@ public abstract class SubLevelMixin implements SubLevelAccess {
         componentType.remove( (SubLevel) (Object) this, component);
 
         return true;
+    }
+    public int id() {
+        return id;
     }
 
 }
