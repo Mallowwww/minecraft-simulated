@@ -1,5 +1,6 @@
 package com.mallowwww.minecraft_simulated;
 
+import com.mallowwww.minecraft_simulated.registry.ModCommands;
 import com.mallowwww.minecraft_simulated.registry.ModItems;
 import com.tterrag.registrate.Registrate;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
