@@ -1,7 +1,7 @@
 package com.mallowwww.minecraft_simulated.registry;
 
 import com.mallowwww.minecraft_simulated.MinecraftSimulated;
-import com.mallowwww.minecraft_simulated.item.MalletItem;
+import com.mallowwww.minecraft_simulated.items.MalletItem;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
