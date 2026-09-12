@@ -1,4 +1,4 @@
-package com.mallowwww.minecraft_simulated.item;
+package com.mallowwww.minecraft_simulated.items;
 
 import dev.ryanhcode.sable.api.SubLevelAssemblyHelper;
 import dev.ryanhcode.sable.companion.SableCompanion;
